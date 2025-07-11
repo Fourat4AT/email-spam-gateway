@@ -36,7 +36,6 @@ This project is an intelligent **email filtering system** that connects to a Gma
 Email-Spam-Gateway/
 
 ├── spam_filter.py # Main Python script
-
 ├── spam_classifier.pkl # Trained ML model
 
 ├── vectorizer.pkl # TF-IDF vectorizer
@@ -44,8 +43,11 @@ Email-Spam-Gateway/
 ├── classified_emails.json # Logged results
 
 ├── credentials.json # Gmail API credentials
+
 ├── token.json # Gmail API access token
+
 ├── .gitignore
+
 └── README.md
 
 ---
