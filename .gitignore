@@ -1,0 +1,5 @@
+token.json
+credentials.json
+__pycache__/
+*.log
+classified_emails.json
