@@ -30,20 +30,37 @@ def classify_email(text):
 def gmail_authenticate():
     creds = None
     if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        try:
+            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        except Exception as e:
+            print(f"Failed to load token.json: {e}")
+            creds = None  # Force reauth if token is corrupted or bad
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                print(f"Token refresh failed: {e}")
+                creds = None  # Force reauth
+        if not creds or not creds.valid:
+            print("Running full authentication flow...")
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+
+        # Only write token if valid
+        if creds and creds.valid:
+            with open('token.json', 'w') as token:
+                token.write(creds.to_json())
+        else:
+            print("ERROR: Could not obtain valid credentials.")
+            exit(1)
+
     return build('gmail', 'v1', credentials=creds)
 
 def append_to_json(data, path):
     with open(path, "a", encoding="utf-8") as f:
-        f.write(json.dumps(data) + "\n")  # one JSON per line
+        f.write(json.dumps(data) + "\n")  
 
 def fetch_emails():
     global last_message_id
@@ -53,7 +70,7 @@ def fetch_emails():
     messages = results.get('messages', [])
 
     new_messages = []
-
+    
     for msg in messages:
         if msg['id'] == last_message_id:
             break  # Stop if we reach the last seen message
@@ -64,7 +81,8 @@ def fetch_emails():
         return
 
     # Update last seen message ID
-    last_message_id = messages[0]['id']
+ #   last_message_id = messages[0]['id']
+    last_message_id = new_messages[0]['id']
 
     for msg in reversed(new_messages):  # Process oldest first
         msg_data = service.users().messages().get(userId='me', id=msg['id']).execute()
@@ -161,7 +179,7 @@ def fetch_emails():
 def Real_Time():
     while True:
         fetch_emails()
-        time.sleep(30)  # Check every 30 seconds
+        time.sleep(30)  
 
-# Start real-time fetch loop
+
 Real_Time()
